@@ -12,5 +12,4 @@ recall () {
     fi
 }
 
-alias history="recall"
 alias rec="recall"
