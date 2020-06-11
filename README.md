@@ -22,5 +22,4 @@ plugins=(
 ```
 rec <words>
 recall <words>
-history <words>
 ```
