@@ -35,13 +35,15 @@ TITLE = HTML(
  Press <b>'q'</b> to quit."""
 )
 
-FOOTER="""[j] [k]: Move        [enter]: Set to next command        [q]: quit"""
+FOOTER="""[j] [k] [down] [up]: Move        [enter]: Set to next command        [q]: quit"""
 
 
 class HistoryLogContainer():
     def __init__(self):
+        self.num_buffer = ''
         self.raw_logs = ''
         self.logs = []
+        self.is_press_number = False
         home_dir = os.environ.get('HOME')
         histfile = os.path.expanduser('{}/.zsh_history'.format(home_dir))
 
@@ -55,13 +57,37 @@ class HistoryLogContainer():
             self.logs.pop()
         self.curr = len(self.logs) - 1
 
+    def push_num_buffer(self, number):
+        self.is_press_number = True
+        self.num_buffer += str(number)
+
+    def reset_num_buffer(self):
+        self.is_press_number = False
+        self.num_buffer = ''
+
     def curr_up(self):
-        if self.curr > 0:
-            self.curr = self.curr - 1
+        if self.is_press_number:
+            length = int(self.num_buffer)
+        else:
+            length = 1
+
+        if self.curr - length > 0:
+            self.curr = self.curr - length
+        else:
+            self.curr = 0
+        self.reset_num_buffer()
     
     def curr_down(self):
-        if self.curr < len(self.logs) - 1:
-            self.curr = self.curr + 1
+        if self.is_press_number:
+            length = int(self.num_buffer)
+        else:
+            length = 1
+
+        if self.curr + length < len(self.logs) - 1:
+            self.curr = self.curr + length
+        else:
+            self.curr = len(self.logs) - 1
+        self.reset_num_buffer()
 
     def get_curr(self):
         return self.curr
@@ -164,13 +190,35 @@ body = HSplit(
 # Key bindings
 kb = KeyBindings()
 
+@kb.add('1')
+@kb.add('2')
+@kb.add('3')
+@kb.add('4')
+@kb.add('5')
+@kb.add('6')
+@kb.add('7')
+@kb.add('8')
+@kb.add('9')
+@kb.add('0')
+def _(event):
+    input_number = event.key_sequence[0].key
+    log_container.push_num_buffer(input_number)
+
+
+@kb.add('escape')
+def _(event):
+    log_container.reset_num_buffer()
+
+
 @kb.add('j')
+@kb.add('down')
 def _(event):
     log_container.curr_down()
     buff.text = print_logs(log_container.get_logs(), log_container.get_curr())
 
 
 @kb.add('k')
+@kb.add('up')
 def _(event):
     log_container.curr_up()
     buff.text = print_logs(log_container.get_logs(), log_container.get_curr())
